@@ -30,10 +30,11 @@ jobs:
           env:
             ENDOR_NAMESPACE: ${{ secrets.ENDOR_NAMESPACE }}
           with:
-            namespace: ${{ ENDOR_NAMESPACE }}
+            namespace: ${{ env.ENDOR_NAMESPACE }}
             scan_summary_output_type: "table"
             pr: "true"
             enable_github_action_token: "true"
             scan_dependencies: "true"
             scan_secrets: "true"
             scan_git_logs: "true"
+            additional_args: "--enable-pr-comments"
