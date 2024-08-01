@@ -138,6 +138,13 @@
 				</exclusion>
 			</exclusions>
       	  </dependency>
+		  <dependency>
+				<groupId>com.datadoghq</groupId>
+				<artifactId>datadog-api-client</artifactId>
+				<version>2.6.0</version>
+				<classifier>shaded-jar</classifier>
+				<scope>compile</scope>
+		  </dependency>
 	</dependencies>
 
 	<build>
