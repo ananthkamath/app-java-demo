@@ -1,0 +1,55 @@
+steps:
+  # Step 1: Fetch The Trigger Branch
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args: 
+      - '-c'
+      - |
+        echo "Fetching all branches..."
+        git fetch origin
+        echo "Checking out branch: ${BRANCH_NAME}"
+        git checkout ${BRANCH_NAME}
+  # Step 2: Install Node.js 20.10
+  - name: 'maven:3.8.6-openjdk-11'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+        node --version
+    id: 'Install Node.js'
+  # Step 3: Build With Maven
+  - name: 'maven:3.8.6-openjdk-11'
+    entrypoint: 'mvn'
+    args: ['clean', 'install']
+    id: 'Build'
+  # Step 4: Install latest version of endorctl
+  - name: 'maven:3.8.6-openjdk-11'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        curl https://api.endorlabs.com/download/latest/endorctl_linux_amd64 -o endorctl
+        echo "$(curl -s https://api.endorlabs.com/sha/latest/endorctl_linux_amd64)  endorctl" | sha256sum -c
+        chmod +x ./endorctl
+        ./endorctl --version
+    id: 'Install latest version of endorctl'
+  # Step 5: SCA Scan With EndorLabs
+  - name: 'maven:3.8.6-openjdk-11'
+    entrypoint: 'bash'
+    args: ["-c", "./endorctl scan -n ananth-learn --api-key $$ENDOR_API_CREDENTIALS_KEY --api-secret $$ENDOR_API_CREDENTIALS_SECRET"]
+    secretEnv: ['ENDOR_API_CREDENTIALS_KEY', 'ENDOR_API_CREDENTIALS_SECRET']
+    id: 'SCA Scan With EndorLabs'
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/1062646801031/secrets/endor-api-key/versions/1
+    env: 'ENDOR_API_CREDENTIALS_KEY'
+  - versionName: projects/1062646801031/secrets/endor-api-secret/versions/1
+    env: 'ENDOR_API_CREDENTIALS_SECRET'
+
+options:
+  logging: 'CLOUD_LOGGING_ONLY'
+  pool:
+    name: 'projects/1062646801031/locations/us-central1/workerPools/JavaPool'
